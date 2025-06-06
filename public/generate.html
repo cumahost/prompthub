@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Kustom - PromptHub</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="module" src="./js/supabase.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-lg p-4 space-y-4">
+      <h1 class="text-xl font-bold text-blue-600">PromptHub 🧠</h1>
+      <nav class="space-y-2">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-500 mb-1">Navigasi</h2>
+          <ul class="space-y-1 text-sm">
+            <li><a href="dashboard.html" class="hover:underline">Dashboard</a></li>
+            <li><a href="history.html" class="hover:underline">History Prompt</a></li>
+            <li><a href="bantuan.html" class="hover:underline">Bantuan Prompt</a></li>
+            <li><a href="generate.html" class="text-blue-700 font-semibold">Custom Prompt</a></li>
+          </ul>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8">
+      <h2 class="text-2xl font-bold mb-6">Formulir Prompt Kustom</h2>
+
+      <form id="promptForm" class="space-y-4 max-w-2xl">
+        <input id="topik" type="text" placeholder="Judul atau tema utama" class="w-full border rounded px-3 py-2" required>
+        <input id="audiens" type="text" placeholder="Untuk siapa prompt ini ditujukan?" class="w-full border rounded px-3 py-2">
+        <input id="gaya" type="text" placeholder="Gaya penulisan atau penyampaian" class="w-full border rounded px-3 py-2">
+        <input id="tujuan" type="text" placeholder="Apa tujuan prompt ini?" class="w-full border rounded px-3 py-2">
+        <input id="panjang" type="text" placeholder="Panjang atau level detail (opsional)" class="w-full border rounded px-3 py-2">
+        <select id="jenis" class="w-full border rounded px-3 py-2">
+          <option value="">Pilih Jenis Prompt</option>
+          <option value="artikel">Artikel</option>
+          <option value="ilustrasi">Ilustrasi</option>
+          <option value="kode">Kode</option>
+          <option value="website">Website</option>
+          <option value="custom">Custom</option>
+        </select>
+
+        <div class="flex gap-2">
+          <button type="button" id="previewBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Preview</button>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Simpan</button>
+          <a href="history.html" class="px-4 py-2 rounded border text-gray-700">Kembali</a>
+        </div>
+      </form>
+
+      <div id="previewBox" class="bg-white border mt-6 p-4 rounded shadow hidden">
+        <h3 class="text-lg font-semibold mb-2">Hasil Prompt:</h3>
+        <pre id="previewContent" class="whitespace-pre-wrap text-sm"></pre>
+        <div class="mt-4">
+          <button id="generateGptBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">🔄 Generate dengan GPT</button>
+        </div>
+        <div id="gptResultBox" class="mt-4 hidden">
+          <h4 class="font-semibold mb-1">Hasil GPT:</h4>
+          <pre id="gptResult" class="text-sm whitespace-pre-wrap bg-gray-50 border rounded p-3"></pre>
+        </div>
+      </div>
+
+      <p id="status" class="text-sm mt-4 text-center text-gray-500 hidden">Menyimpan prompt...</p>
+    </main>
+  </div>
+
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+    }
+    const user = session.user;
+
+    const form = document.getElementById('promptForm');
+    const statusText = document.getElementById('status');
+    const previewBtn = document.getElementById('previewBtn');
+    const previewBox = document.getElementById('previewBox');
+    const previewContent = document.getElementById('previewContent');
+    const generateGptBtn = document.getElementById('generateGptBtn');
+    const gptResultBox = document.getElementById('gptResultBox');
+    const gptResult = document.getElementById('gptResult');
+
+    const prefill = JSON.parse(localStorage.getItem('prompt_prefill') || 'null');
+    if (prefill) {
+      document.getElementById('topik').value = prefill.topik || '';
+      document.getElementById('audiens').value = prefill.audiens || '';
+      document.getElementById('gaya').value = prefill.gaya || '';
+      document.getElementById('tujuan').value = prefill.tujuan || '';
+      document.getElementById('panjang').value = prefill.panjang || '';
+      document.getElementById('jenis').value = prefill.jenis || 'custom';
+      localStorage.removeItem('prompt_prefill');
+    }
+
+    function generatePromptText(meta) {
+      return `Buatkan prompt untuk:\n- Topik: ${meta.topik}\n- Audiens: ${meta.audiens || '-'}\n- Gaya: ${meta.gaya || '-'}\n- Tujuan: ${meta.tujuan || '-'}\n- Panjang: ${meta.panjang || '-'}`;
+    }
+
+    previewBtn.addEventListener('click', () => {
+      const meta = collectMeta();
+      const isi = generatePromptText(meta);
+      previewContent.textContent = isi;
+      previewBox.classList.remove('hidden');
+    });
+
+    generateGptBtn.addEventListener('click', async () => {
+      const prompt = previewContent.textContent;
+      gptResultBox.classList.remove('hidden');
+      gptResult.textContent = '⏳ Menghasilkan...';
+
+      try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+
+          },
+          body: JSON.stringify({
+            model: 'gpt-3.5-turbo',
+            messages: [
+              { role: 'system', content: 'Anda adalah asisten AI yang membantu membuat konten.' },
+              { role: 'user', content: prompt }
+            ]
+          })
+        });
+
+        const data = await response.json();
+        const result = data.choices?.[0]?.message?.content || '⚠️ Tidak ada hasil';
+        gptResult.textContent = result;
+      } catch (err) {
+        gptResult.textContent = '❌ Gagal menghubungi OpenAI API';
+      }
+    });
+
+    function collectMeta() {
+      return {
+        topik: document.getElementById('topik').value.trim(),
+        audiens: document.getElementById('audiens').value.trim(),
+        gaya: document.getElementById('gaya').value.trim(),
+        tujuan: document.getElementById('tujuan').value.trim(),
+        panjang: document.getElementById('panjang').value.trim(),
+        jenis: document.getElementById('jenis').value || 'custom'
+      };
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusText.classList.remove('hidden');
+      statusText.textContent = 'Menyimpan prompt...';
+
+      const meta = collectMeta();
+      const isi = generatePromptText(meta);
+
+      const prompt = {
+        jenis: meta.jenis,
+        isi,
+        meta,
+        user_id: user.id
+      };
+
+      const { error } = await supabase.from('prompts').insert([prompt]);
+      if (error) {
+        statusText.textContent = 'Gagal menyimpan. Silakan coba lagi.';
+        return;
+      }
+      statusText.textContent = 'Berhasil! Mengalihkan...';
+      setTimeout(() => window.location.href = 'history.html', 1000);
+    });
+  </script>
+</body>
+</html>

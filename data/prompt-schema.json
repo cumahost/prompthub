@@ -1,0 +1,22 @@
+{
+  "artikel": {
+    "title": "Buat Prompt Artikel",
+    "fields": [
+      { "label": "Topik", "type": "text", "placeholder": "Contoh: Bisnis Online untuk UMKM" },
+      { "label": "Target Audiens", "type": "text", "placeholder": "Contoh: Pelaku UMKM pemula" },
+      { "label": "Gaya Penulisan", "type": "text", "placeholder": "Contoh: Naratif santai dan profesional" },
+      { "label": "Tujuan Artikel", "type": "textarea", "placeholder": "Contoh: Edukasi UMKM tentang risiko marketplace" },
+      { "label": "Panjang Artikel", "type": "text", "placeholder": "Contoh: 700 kata" }
+    ]
+  },
+  "ilustrasi": {
+    "title": "Buat Prompt Ilustrasi",
+    "fields": [
+      { "label": "Objek Utama", "type": "text", "placeholder": "Contoh: Ibu UMKM membuka laptop" },
+      { "label": "Setting/Latar", "type": "text", "placeholder": "Contoh: Toko rumahan sederhana" },
+      { "label": "Gaya Visual", "type": "text", "placeholder": "Contoh: Flat design, kartun" },
+      { "label": "Warna Dominan", "type": "text", "placeholder": "Contoh: Biru pastel" },
+      { "label": "Tujuan Gambar", "type": "text", "placeholder": "Contoh: Untuk banner Instagram" }
+    ]
+  }
+}

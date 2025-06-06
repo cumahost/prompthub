@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - PromptHub</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="w-full max-w-md p-8 bg-white rounded shadow">
+    <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">Masuk ke PromptHub</h1>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block font-medium">Email</label>
+        <input type="email" id="email" required placeholder="nama@email.com"
+               class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        Kirim Magic Link
+      </button>
+    </form>
+    <p id="message" class="mt-4 text-center text-sm text-green-600 hidden">Tautan login telah dikirim ke email Anda.</p>
+  </div>
+
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+
+    const form = document.getElementById('login-form');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+
+      const { error } = await supabase.auth.signInWithOtp({ email });
+
+      if (error) {
+        alert('Gagal mengirim magic link: ' + error.message);
+      } else {
+        form.classList.add('hidden');
+        message.classList.remove('hidden');
+      }
+    });
+  </script>
+  <script type="module">
+  import { supabase } from './js/supabase.js';
+
+  // Tangkap session jika user redirect dari magic link
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN') {
+      console.log('✅ Login berhasil dari magic link');
+      window.location.href = 'dashboard.html';
+    }
+  });
+
+  // Fallback: jika session sudah ada, langsung ke dashboard
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+</body>
+</html>
