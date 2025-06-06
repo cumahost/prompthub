@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - PromptHub</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-lg p-4 space-y-4">
+      <h1 class="text-xl font-bold text-blue-600">PromptHub 🧠</h1>
+      <nav class="space-y-2">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-500 mb-1">Buat Prompt</h2>
+          <ul class="space-y-1 text-sm">
+            <li><a href="#" class="text-blue-700 hover:underline">Artikel</a></li>
+            <li><a href="#" class="text-blue-700 hover:underline">Ilustrasi</a></li>
+            <li><a href="#" class="text-blue-700 hover:underline">Kode / Script</a></li>
+            <li><a href="#" class="text-blue-700 hover:underline">Toko Online</a></li>
+            <li><a href="#" class="text-blue-700 hover:underline">Surat Resmi</a></li>
+            <li><a href="#" class="text-blue-700 hover:underline">Custom Prompt</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="text-sm font-semibold text-gray-500 mb-1">Lainnya</h2>
+          <ul class="space-y-1 text-sm">
+            <li><a href="history.html" class="hover:underline">History Prompt</a></li>
+            <li><a href="bantuan.html" class="hover:underline">Bantuan Prompt</a></li>
+            <li><a href="#" class="hover:underline">Pengaturan</a></li>
+          </ul>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8">
+      <h2 class="text-2xl font-bold mb-6">Buat Prompt - Artikel</h2>
+      <form class="space-y-4 max-w-xl">
+        <div>
+          <label class="block font-semibold">Topik Artikel <span title="Apa yang akan dibahas dalam artikel?" class="text-gray-400 cursor-help">ⓘ</span></label>
+          <input type="text" class="w-full border p-2 rounded" placeholder="Contoh: Bisnis Online untuk UMKM">
+        </div>
+        <div>
+          <label class="block font-semibold">Target Audiens <span title="Siapa yang akan membaca artikel ini?" class="text-gray-400 cursor-help">ⓘ</span></label>
+          <input type="text" class="w-full border p-2 rounded" placeholder="Contoh: Pelaku UMKM pemula">
+        </div>
+        <div>
+          <label class="block font-semibold">Gaya Penulisan <span title="Gaya bahasa artikel, misal santai, formal, edukatif." class="text-gray-400 cursor-help">ⓘ</span></label>
+          <input type="text" class="w-full border p-2 rounded" placeholder="Contoh: Naratif santai dan profesional">
+        </div>
+        <div>
+          <label class="block font-semibold">Tujuan Artikel</label>
+          <textarea class="w-full border p-2 rounded" rows="3" placeholder="Contoh: Edukasi UMKM tentang risiko bergantung pada marketplace."></textarea>
+        </div>
+        <div>
+          <label class="block font-semibold">Panjang Artikel (opsional)</label>
+          <input type="text" class="w-full border p-2 rounded" placeholder="Contoh: 700 kata">
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Preview Prompt</button>
+        <button type="button" id="saveBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          Simpan ke History
+        </button>
+        <p id="saveMsg" class="text-sm text-green-600 mt-4 hidden">✅ Prompt berhasil disimpan ke Supabase!</p>
+      </form>
+
+      <!-- Preview Area -->
+      <section class="mt-8">
+        <h3 class="text-lg font-bold mb-2">Hasil Prompt:</h3>
+        <div class="bg-white p-4 rounded shadow text-sm text-gray-700" id="preview-area">
+          <p><i>(Prompt akan ditampilkan di sini setelah form dikirim)</i></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (!session) {
+      alert('Kamu belum login!');
+      window.location.href = 'login.html';
+    } else {
+      console.log('✅ Masuk sebagai:', session.user.email);
+    }
+  </script>
+</body>
+</html>

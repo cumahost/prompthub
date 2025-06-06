@@ -1,0 +1,40 @@
+{
+  "name": "prompthub",
+  "version": "1.0.0",
+  "description": "",
+  "main": "supabase-config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node supabase-config.js",
+    "supabase": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:db-pull": "supabase db pull",
+    "supabase:db-push": "supabase db push",
+    "supabase:db-reset": "supabase db reset",
+    "supabase:db-seed": "supabase db seed",
+    "supabase:db-logs": "supabase db logs",
+    "supabase:db-logs:tail": "supabase db logs --tail",
+    "supabase:db-logs:clear": "supabase db logs --clear",
+    "supabase:db-logs:download": "supabase db logs --download",
+    "supabase:db-logs:download:json": "supabase db logs --download --json",
+    "supabase:db-logs:download:csv": "supabase db logs --download --csv",
+    "supabase:db-logs:download:sql": "supabase db logs --download --sql",
+    "supabase:db-logs:download:html": "supabase db logs --download --html",
+    "supabase:db-logs:download:txt": "supabase db logs --download --txt",
+    "supabase:db-logs:download:xml": "supabase db logs --download --xml",
+    "supabase:db-logs:download:yaml": "supabase db logs --download --yaml",
+    "supabase:db-logs:download:md": "supabase db logs --download --md",
+    "supabase:db-logs:download:pdf": "supabase db logs --download --pdf",
+    "dev": "tailwindcss -i ./public/css/tailwind.css -o ./public/css/style.css --watch",
+    "build": "tailwindcss -i ./public/css/tailwind.css -o ./public/css/style.css --minify",
+    "postinstall": "npm run build"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^3.3.5"
+  }
+}
