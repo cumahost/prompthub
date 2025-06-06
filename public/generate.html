@@ -6,11 +6,12 @@
   <title>Prompt Kustom - PromptHub</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="./js/config.js"></script>
   <script type="module" src="./js/supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-gray-100 text-gray-900 min-h-screen">
   <div class="flex min-h-screen">
-    <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-lg p-4 space-y-4">
       <h1 class="text-xl font-bold text-blue-600">PromptHub 🧠</h1>
       <nav class="space-y-2">
@@ -26,7 +27,6 @@
       </nav>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 p-8">
       <h2 class="text-2xl font-bold mb-6">Formulir Prompt Kustom</h2>
 
@@ -62,6 +62,9 @@
           <h4 class="font-semibold mb-1">Hasil GPT:</h4>
           <pre id="gptResult" class="text-sm whitespace-pre-wrap bg-gray-50 border rounded p-3"></pre>
         </div>
+        <div id="exportPdfBox" class="mt-4 hidden">
+          <button id="exportPdfBtn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">⬇️ Export ke PDF</button>
+        </div>
       </div>
 
       <p id="status" class="text-sm mt-4 text-center text-gray-500 hidden">Menyimpan prompt...</p>
@@ -70,12 +73,7 @@
 
   <script type="module">
     import { supabase } from './js/supabase.js';
-
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      window.location.href = 'login.html';
-    }
-    const user = session.user;
+    const apiKey = window.OPENAI_API_KEY;
 
     const form = document.getElementById('promptForm');
     const statusText = document.getElementById('status');
@@ -85,6 +83,11 @@
     const generateGptBtn = document.getElementById('generateGptBtn');
     const gptResultBox = document.getElementById('gptResultBox');
     const gptResult = document.getElementById('gptResult');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) window.location.href = 'login.html';
+    const user = session.user;
 
     const prefill = JSON.parse(localStorage.getItem('prompt_prefill') || 'null');
     if (prefill) {
@@ -95,10 +98,6 @@
       document.getElementById('panjang').value = prefill.panjang || '';
       document.getElementById('jenis').value = prefill.jenis || 'custom';
       localStorage.removeItem('prompt_prefill');
-    }
-
-    function generatePromptText(meta) {
-      return `Buatkan prompt untuk:\n- Topik: ${meta.topik}\n- Audiens: ${meta.audiens || '-'}\n- Gaya: ${meta.gaya || '-'}\n- Tujuan: ${meta.tujuan || '-'}\n- Panjang: ${meta.panjang || '-'}`;
     }
 
     previewBtn.addEventListener('click', () => {
@@ -118,8 +117,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
-
+            'Authorization': `Bearer ${apiKey}`
           },
           body: JSON.stringify({
             model: 'gpt-3.5-turbo',
@@ -133,21 +131,37 @@
         const data = await response.json();
         const result = data.choices?.[0]?.message?.content || '⚠️ Tidak ada hasil';
         gptResult.textContent = result;
+        document.getElementById('exportPdfBox').classList.remove('hidden');
+
       } catch (err) {
         gptResult.textContent = '❌ Gagal menghubungi OpenAI API';
       }
     });
 
-    function collectMeta() {
-      return {
-        topik: document.getElementById('topik').value.trim(),
-        audiens: document.getElementById('audiens').value.trim(),
-        gaya: document.getElementById('gaya').value.trim(),
-        tujuan: document.getElementById('tujuan').value.trim(),
-        panjang: document.getElementById('panjang').value.trim(),
-        jenis: document.getElementById('jenis').value || 'custom'
-      };
-    }
+    exportPdfBtn.addEventListener('click', () => {
+      const meta = collectMeta();
+      const isi = previewContent.textContent;
+      const hasil = gptResult.textContent;
+      const now = new Date().toISOString().slice(0, 10);
+
+      const container = document.createElement('div');
+      container.innerHTML = `
+        <h2 style="font-size:18px;font-weight:bold;margin-bottom:8px">PromptHub - Export</h2>
+        <p><strong>Topik:</strong> ${meta.topik}</p>
+        <p><strong>Audiens:</strong> ${meta.audiens}</p>
+        <p><strong>Gaya:</strong> ${meta.gaya}</p>
+        <p><strong>Tujuan:</strong> ${meta.tujuan}</p>
+        <p><strong>Panjang:</strong> ${meta.panjang}</p>
+        <p><strong>Jenis:</strong> ${meta.jenis}</p>
+        <hr>
+        <h3>Prompt:</h3>
+        <pre>${isi}</pre>
+        <h3>Hasil GPT:</h3>
+        <pre>${hasil}</pre>
+      `;
+
+      html2pdf().from(container).set({ margin: 0.5, filename: `prompthub-export-${now}.pdf` }).save();
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -172,6 +186,21 @@
       statusText.textContent = 'Berhasil! Mengalihkan...';
       setTimeout(() => window.location.href = 'history.html', 1000);
     });
+
+    function collectMeta() {
+      return {
+        topik: document.getElementById('topik').value.trim(),
+        audiens: document.getElementById('audiens').value.trim(),
+        gaya: document.getElementById('gaya').value.trim(),
+        tujuan: document.getElementById('tujuan').value.trim(),
+        panjang: document.getElementById('panjang').value.trim(),
+        jenis: document.getElementById('jenis').value || 'custom'
+      };
+    }
+
+    function generatePromptText(meta) {
+      return `Buatkan prompt untuk:\n- Topik: ${meta.topik}\n- Audiens: ${meta.audiens || '-'}\n- Gaya: ${meta.gaya || '-'}\n- Tujuan: ${meta.tujuan || '-'}\n- Panjang: ${meta.panjang || '-'}`;
+    }
   </script>
 </body>
 </html>
